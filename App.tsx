@@ -23,7 +23,9 @@ interface StatusData {
 }
 
 // API Configuration
-const API_BASE_URL = 'http://localhost:3001/api';
+// For physical devices, replace localhost with your computer's IP address
+// Example: const API_BASE_URL = 'http://192.168.1.100:3001/api';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 // Mock Clerk Authentication (simplified for demonstration)
 // In production, replace with actual Clerk integration
@@ -130,7 +132,7 @@ export default function App() {
     // Poll for updates every 5 seconds
     const interval = setInterval(fetchStatus, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, []); // fetchStatus is stable and doesn't use external dependencies
 
   if (loading) {
     return (

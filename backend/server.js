@@ -82,7 +82,15 @@ app.get('/api/user/level', checkUserLevel, (req, res) => {
 });
 
 // Update user level (admin endpoint - would be protected in production)
-app.post('/api/user/level', (req, res) => {
+// WARNING: This endpoint should require admin authentication in production
+app.post('/api/user/level', checkUserLevel, (req, res) => {
+  // In production, verify requesting user is an admin
+  if (req.userLevel < 5) {
+    return res.status(403).json({
+      error: 'Insufficient permissions. Admin access required.'
+    });
+  }
+  
   const { userId, level } = req.body;
   
   if (level < 0 || level > 5) {
