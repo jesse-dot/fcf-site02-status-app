@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/clerk-react';
 import { Shield, AlertTriangle, Lock, Eye, Settings } from 'lucide-react';
 
 // Type definitions
@@ -15,14 +16,8 @@ interface StatusData {
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
-// Mock Clerk Authentication (simplified for demonstration)
-// In production, replace with actual Clerk integration
-const mockClerkUser = {
-  id: 'user_demo123',
-  isSignedIn: true,
-};
-
 export default function App() {
+  const { user, isLoaded } = useUser();
   const [statusData, setStatusData] = useState<StatusData | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -30,10 +25,12 @@ export default function App() {
 
   // Fetch current status
   const fetchStatus = async () => {
+    if (!user?.id) return;
+    
     try {
       const response = await fetch(`${API_BASE_URL}/site02/status`, {
         headers: {
-          'x-user-id': mockClerkUser.id,
+          'x-user-id': user.id,
         },
       });
       const data = await response.json();
@@ -47,14 +44,16 @@ export default function App() {
         status: 'ONLINE',
         lastUpdated: new Date().toISOString(),
         updatedBy: null,
-        userLevel: 5, // Set to 5 for demo purposes
-        canEdit: true,
+        userLevel: 1, // Default to read-only for safety
+        canEdit: false,
       });
     }
   };
 
   // Update status (Level 5+ only)
   const updateStatus = async (newStatus: SiteStatus) => {
+    if (!user?.id) return;
+    
     if (!statusData?.canEdit) {
       alert('Access Denied\n\nYou need Level 5 (Admin) permissions to change the site status.');
       return;
@@ -66,7 +65,7 @@ export default function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': mockClerkUser.id,
+          'x-user-id': user.id,
         },
         body: JSON.stringify({ status: newStatus }),
       });
@@ -103,13 +102,15 @@ export default function App() {
   }, [statusData?.status]);
 
   useEffect(() => {
-    fetchStatus();
-    // Poll for updates every 5 seconds
-    const interval = setInterval(fetchStatus, 5000);
-    return () => clearInterval(interval);
-  }, []); // fetchStatus is stable and doesn't use external dependencies
+    if (user?.id) {
+      fetchStatus();
+      // Poll for updates every 5 seconds
+      const interval = setInterval(fetchStatus, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [user?.id]); // Re-fetch when user changes
 
-  if (loading) {
+  if (!isLoaded || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950">
         <div className="text-center">
@@ -149,20 +150,41 @@ export default function App() {
   const lockdownBackground = statusData?.status === 'LOCKDOWN';
 
   return (
-    <div className="relative min-h-screen bg-slate-950">
-      {lockdownBackground && (
-        <div
-          className="absolute inset-0 bg-red-600 transition-opacity duration-500"
-          style={{ opacity: flashOpacity }}
-        />
-      )}
-
-      <div className="relative flex min-h-screen flex-col px-6 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">FCF Status Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-400">Site 02 Monitoring System</p>
+    <>
+      <SignedOut>
+        <div className="flex min-h-screen items-center justify-center bg-slate-950">
+          <div className="text-center max-w-md px-6">
+            <Shield size={64} className="text-blue-600 mx-auto mb-6" />
+            <h1 className="text-3xl font-bold text-white mb-4">FCF Status Dashboard</h1>
+            <p className="text-gray-400 mb-8">Site 02 Monitoring System</p>
+            <p className="text-gray-300 mb-6">Sign in to access the dashboard</p>
+            <SignInButton mode="modal">
+              <button className="w-full rounded-lg bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition-colors">
+                Sign In
+              </button>
+            </SignInButton>
+          </div>
         </div>
+      </SignedOut>
+
+      <SignedIn>
+        <div className="relative min-h-screen bg-slate-950">
+          {lockdownBackground && (
+            <div
+              className="absolute inset-0 bg-red-600 transition-opacity duration-500"
+              style={{ opacity: flashOpacity }}
+            />
+          )}
+
+          <div className="relative flex min-h-screen flex-col px-6 py-8">
+            {/* Header */}
+            <div className="mb-8 flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-white">FCF Status Dashboard</h1>
+                <p className="mt-1 text-sm text-gray-400">Site 02 Monitoring System</p>
+              </div>
+              <UserButton afterSignOutUrl="/" />
+            </div>
 
         {/* User Level Badge */}
         <div className="mb-6 flex items-center justify-between">
@@ -277,5 +299,7 @@ export default function App() {
         </div>
       </div>
     </div>
+      </SignedIn>
+    </>
   );
 }
