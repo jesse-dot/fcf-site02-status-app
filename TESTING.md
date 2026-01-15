@@ -1,5 +1,17 @@
 # Testing Guide for FCF Site 02 Status App
 
+## Prerequisites
+
+Before testing, you must set up Clerk authentication:
+
+1. Sign up at [clerk.com](https://clerk.com)
+2. Create a new application
+3. Get your publishable key from the API Keys section
+4. Create a `.env` file with:
+```bash
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
+```
+
 ## Quick Start Testing
 
 ### 1. Install Dependencies
@@ -21,27 +33,25 @@ FCF Site 02 Status Backend running on port 3001
 Current Site 02 Status: ONLINE
 ```
 
-### 3. Start the React Native App
+### 3. Start the React App
 
 In terminal 2:
 ```bash
-npm start
+npm run dev
 ```
+
+The app will be available at `http://localhost:5173` (Vite default port)
+
+You will see a sign-in screen. Click "Sign In" to authenticate with Clerk.
 
 ## Testing Scenarios
 
 ### Scenario 1: View-Only User (Level 1-4)
 
-The default mock user starts at Level 5 for demonstration. To test read-only mode:
+New users authenticated via Clerk start at Level 1 (Read-Only) by default. To test:
 
-1. In `App.tsx`, change line 68 to:
-```typescript
-userLevel: 1, // Changed from 5
-canEdit: false, // Changed from true
-```
-
-2. Restart the app
-3. Verify:
+1. Sign in with a new Clerk account
+2. Verify:
    - Status is visible
    - User level badge shows "Level 1 (Read-Only)"
    - Eye icon appears next to level badge
@@ -50,10 +60,18 @@ canEdit: false, // Changed from true
 
 ### Scenario 2: Admin User (Level 5)
 
-Default configuration (Level 5):
+To grant admin access to a user:
 
-1. Start the app (default is Level 5)
-2. Verify:
+1. Get the user's Clerk ID after they sign in (check browser console or backend logs)
+2. Use the backend API to set their level to 5:
+```bash
+curl -X POST http://localhost:3001/api/user/level \
+  -H "Content-Type: application/json" \
+  -H "x-user-id: <admin_user_id>" \
+  -d '{"userId": "<clerk_user_id>", "level": 5}'
+```
+3. Refresh the app
+4. Verify:
    - Status is visible
    - User level badge shows "Level 5 (Admin)"
    - Control panel with three buttons is visible
@@ -89,17 +107,17 @@ With backend running:
 1. Open app
 2. Change status to "ALERT"
 3. Check backend terminal - should show the update
-4. Use curl to verify:
+4. Use curl to verify (replace <clerk_user_id> with actual user ID):
 ```bash
 curl http://localhost:3001/api/site02/status \
-  -H "x-user-id: user_demo123"
+  -H "x-user-id: <clerk_user_id>"
 ```
 
-5. Update user level via API:
+5. Update status via API:
 ```bash
 curl -X POST http://localhost:3001/api/site02/status \
   -H "Content-Type: application/json" \
-  -H "x-user-id: user_demo123" \
+  -H "x-user-id: <clerk_user_id>" \
   -d '{"status": "LOCKDOWN"}'
 ```
 
@@ -116,27 +134,29 @@ If backend is not running:
 
 ## User Level API Testing
 
-### Get User Level
+### Get User Level (replace <clerk_user_id> with actual user ID)
 ```bash
 curl http://localhost:3001/api/user/level \
-  -H "x-user-id: user_demo123"
+  -H "x-user-id: <clerk_user_id>"
 ```
 
 ### Set User Level to 1 (Read-Only)
 ```bash
 curl -X POST http://localhost:3001/api/user/level \
   -H "Content-Type: application/json" \
-  -d '{"userId": "user_demo123", "level": 1}'
+  -H "x-user-id: <admin_user_id>" \
+  -d '{"userId": "<clerk_user_id>", "level": 1}'
 ```
 
 ### Set User Level to 5 (Admin)
 ```bash
 curl -X POST http://localhost:3001/api/user/level \
   -H "Content-Type: application/json" \
-  -d '{"userId": "user_demo123", "level": 5}'
+  -H "x-user-id: <admin_user_id>" \
+  -d '{"userId": "<clerk_user_id>", "level": 5}'
 ```
 
-After changing user level via API, restart the app to see the changes.
+After changing user level via API, refresh the app to see the changes.
 
 ## Visual Verification Checklist
 
@@ -152,10 +172,9 @@ After changing user level via API, restart the app to see the changes.
 
 ## Known Demo Limitations
 
-1. **Clerk Integration**: Uses mock user instead of real Clerk authentication
-2. **Assets**: Placeholder assets (icon.png, splash.png not provided)
-3. **Database**: Uses in-memory storage instead of persistent database
-4. **API URL**: Hardcoded to localhost:3001 (would need environment variables for production)
+1. **User Levels**: User levels are stored in-memory on the backend and will reset when the server restarts
+2. **Database**: Uses in-memory storage instead of persistent database
+3. **API URL**: Defaults to localhost:3001 (configure via VITE_API_URL for production)
 
 ## Platform-Specific Testing
 

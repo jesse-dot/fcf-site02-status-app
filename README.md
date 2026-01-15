@@ -6,7 +6,7 @@ A web-based React application built with Vite and TailwindCSS for monitoring and
 
 - **Modern Dark UI**: Slate-950 background with Blue-600 accents
 - **Web Browser Only**: Runs in any modern web browser
-- **Authentication**: Clerk integration (new users start at Level 1)
+- **Authentication**: Clerk authentication with sign-in/sign-out (new users start at Level 1)
 - **User Levels**: 
   - Level 0-4: Read-Only access
   - Level 5: Admin access with edit capabilities
@@ -50,6 +50,14 @@ cd fcf-site02-status-app
 ```bash
 npm install
 ```
+
+3. Set up environment variables:
+```bash
+cp .env.example .env
+# Edit .env and add your Clerk publishable key
+```
+
+You must set `VITE_CLERK_PUBLISHABLE_KEY` in your `.env` file before running the app.
 
 ## Running the Application
 
@@ -101,16 +109,24 @@ curl -X POST http://localhost:3001/api/user/level \
 
 ### Clerk Authentication
 
-The current implementation uses a mock Clerk user for demonstration. To integrate with actual Clerk:
+This application uses Clerk for authentication. To set it up:
 
 1. Sign up at [clerk.com](https://clerk.com)
-2. Get your publishable key
-3. Install Clerk React SDK (already in dependencies)
-4. Replace the mock user in `src/App.tsx` with real Clerk components:
+2. Create a new application in the Clerk dashboard
+3. Get your publishable key from the API Keys section
+4. Create a `.env` file in the project root:
 
-```tsx
-import { ClerkProvider, SignedIn, SignedOut, useUser } from '@clerk/clerk-react';
+```bash
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
 ```
+
+5. (Optional) Set a custom API URL if needed:
+
+```bash
+VITE_API_URL=http://localhost:3001/api
+```
+
+New users will automatically start at Level 1 (Read-Only). To grant admin access, see the User Levels section below.
 
 ## API Endpoints
 
@@ -198,11 +214,12 @@ npm run preview
 
 ## Security Notes
 
-- In production, implement proper authentication with Clerk
-- Secure backend endpoints with proper auth middleware
-- Use environment variables for sensitive configuration
-- Implement HTTPS for API communication
-- Store user levels in a secure database
+- Clerk authentication is fully integrated for user sign-in/sign-out
+- Backend endpoints use Clerk user IDs for permission checking
+- User levels should be stored in a secure database for production
+- Use environment variables for Clerk keys and API configuration
+- Implement HTTPS for API communication in production
+- Consider adding Clerk webhook integration for user management
 
 ## License
 
