@@ -1,10 +1,11 @@
 # FCF Site 02 Status App
 
-A React Native application built with NativeWind (TailwindCSS) for monitoring and controlling FCF Site 02 status. Features a modern dark dashboard UI with Clerk authentication integration and role-based access control.
+A web-based React application built with Vite and TailwindCSS for monitoring and controlling FCF Site 02 status. Features a modern dark dashboard UI with Clerk authentication integration and role-based access control.
 
 ## Features
 
 - **Modern Dark UI**: Slate-950 background with Blue-600 accents
+- **Web Browser Only**: Runs in any modern web browser
 - **Authentication**: Clerk integration (new users start at Level 1)
 - **User Levels**: 
   - Level 0-4: Read-Only access
@@ -12,28 +13,30 @@ A React Native application built with NativeWind (TailwindCSS) for monitoring an
 - **Site Status Control**: Toggle between ONLINE, ALERT, and LOCKDOWN states
 - **Lockdown Mode**: Red flashing UI when Site 02 is in LOCKDOWN
 - **Backend**: Self-hosted Node.js/Express server for status management
-- **Icons**: Lucide React Native icons
+- **Icons**: Lucide React icons
 
 ## Project Structure
 
 ```
 fcf-site02-status-app/
-├── App.tsx                 # Main application component
+├── src/
+│   ├── App.tsx            # Main application component
+│   ├── main.tsx           # Application entry point
+│   └── index.css          # Global styles with TailwindCSS
 ├── backend/
 │   └── server.js          # Node.js/Express backend server
+├── index.html             # HTML entry point
 ├── package.json           # Dependencies and scripts
 ├── tailwind.config.js     # TailwindCSS configuration
-├── babel.config.js        # Babel configuration with NativeWind
-├── tsconfig.json          # TypeScript configuration
-└── app.json               # Expo configuration
+├── vite.config.ts         # Vite build configuration
+└── tsconfig.json          # TypeScript configuration
 ```
 
 ## Prerequisites
 
 - Node.js 16+ 
 - npm or yarn
-- Expo CLI
-- iOS Simulator (for iOS) or Android Emulator (for Android)
+- Modern web browser (Chrome, Firefox, Safari, Edge)
 
 ## Installation
 
@@ -60,18 +63,17 @@ npm run server
 
 The backend will run on `http://localhost:3001`
 
-### Start the React Native App
+### Start the Web Application
 
-In another terminal, start the Expo development server:
+In another terminal, start the Vite development server:
 
 ```bash
-npm start
+npm run dev
 ```
 
-Then choose your platform:
-- Press `i` for iOS simulator
-- Press `a` for Android emulator
-- Press `w` for web browser
+The app will be available at `http://localhost:3000`
+
+Open your web browser and navigate to `http://localhost:3000`
 
 ## Configuration
 
@@ -103,11 +105,11 @@ The current implementation uses a mock Clerk user for demonstration. To integrat
 
 1. Sign up at [clerk.com](https://clerk.com)
 2. Get your publishable key
-3. Install Clerk Expo SDK (already in dependencies)
-4. Replace the mock user in `App.tsx` with real Clerk components:
+3. Install Clerk React SDK (already in dependencies)
+4. Replace the mock user in `src/App.tsx` with real Clerk components:
 
 ```tsx
-import { ClerkProvider, SignedIn, SignedOut, useUser } from '@clerk/clerk-expo';
+import { ClerkProvider, SignedIn, SignedOut, useUser } from '@clerk/clerk-react';
 ```
 
 ## API Endpoints
@@ -173,12 +175,26 @@ Update user level (admin endpoint)
 ## Development
 
 The application is built with:
-- **React Native**: Mobile framework
-- **Expo**: Development platform
-- **NativeWind**: TailwindCSS for React Native
+- **React**: UI framework
+- **Vite**: Build tool and dev server
+- **TailwindCSS**: Utility-first CSS framework
 - **TypeScript**: Type safety
-- **Lucide React Native**: Icon system
+- **Lucide React**: Icon system
 - **Express.js**: Backend API server
+
+## Production Build
+
+To create a production build:
+
+```bash
+npm run build
+```
+
+The build output will be in the `dist/` directory. You can preview the production build:
+
+```bash
+npm run preview
+```
 
 ## Security Notes
 
